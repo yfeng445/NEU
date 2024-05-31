@@ -1,2 +1,2 @@
 # NEU
-Archive of NEU courses
+Archive of NEU courses resources.
