@@ -28,15 +28,15 @@ public class MainJFrame extends javax.swing.JFrame {
     
     private void generateDemoData(){
         Account newAccount = accountDirectory.addAccount();
-        newAccount.setAccountNumber("114");
-        newAccount.setRoutingNumber("514");
-        newAccount.setBankName("横浜銀行 下北沢支店");
-        newAccount.setBalance(114514);
+        newAccount.setAccountNumber("444444");
+        newAccount.setRoutingNumber("0011223344");
+        newAccount.setBankName("Bank of America");
+        newAccount.setBalance(200);
         
         Account anotherNewAccount = accountDirectory.addAccount();
-        anotherNewAccount.setAccountNumber("1919");
-        anotherNewAccount.setRoutingNumber("810");
-        anotherNewAccount.setBankName("三井住友銀行 下北沢支店");
+        anotherNewAccount.setAccountNumber("555555");
+        anotherNewAccount.setRoutingNumber("00772211");
+        anotherNewAccount.setBankName("Chase Bank");
         anotherNewAccount.setBalance(1919810);
     }
 
