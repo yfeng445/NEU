@@ -29,6 +29,15 @@ CREATE TABLE UrbanIssue (
     IssueEffect DECIMAL(5, 2)
 );
 
+CREATE TABLE IssueMetrics (
+    MetricID INT PRIMARY KEY,       -- PK
+    IssueID INT,                    -- FK to UrbanIssue
+    MetricName VARCHAR(100),        -- Type of issue metric (e.g., PollutionLevel, CrimeRate)
+    MetricValue DECIMAL(5, 2),      -- Quantitative value for the metric
+    MetricDate DATETIME,            -- Timestamp for when this metric was observed
+    FOREIGN KEY (IssueID) REFERENCES UrbanIssue(IssueID)
+);
+
 CREATE TABLE Trend (
     TrendID INT PRIMARY KEY,        -- PK
     TrendDescription TEXT,
@@ -36,16 +45,15 @@ CREATE TABLE Trend (
     TrendEffect DECIMAL(5, 2)
 );
 
-CREATE TABLE EffectMatrix (
+CREATE TABLE TrendMetrics (
     MetricID INT PRIMARY KEY,       -- PK
     TrendID INT,                    -- FK to Trend
-    IssueID INT,                    -- FK to UrbanIssue
-    EffectedField VARCHAR(100),
-    MetricValue DECIMAL(5, 2),
-    MetricDate DATETIME,
-    FOREIGN KEY (TrendID) REFERENCES Trend(TrendID),
-    FOREIGN KEY (IssueID) REFERENCES UrbanIssue(IssueID)
+    MetricName VARCHAR(100),        -- Type of trend metric (e.g., ExerciseLevel, SleepDuration)
+    MetricValue DECIMAL(5, 2),      -- Quantitative value for the metric
+    MetricDate DATETIME,            -- Timestamp for when this metric was observed
+    FOREIGN KEY (TrendID) REFERENCES Trend(TrendID)
 );
+
 
 CREATE TABLE ActivityData (
     ActivityDataID INT PRIMARY KEY, -- PK
