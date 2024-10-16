@@ -6,30 +6,157 @@ This document outlines the framework for calculating wellness scores using AI te
 
 ## 1. Data Collection and Preprocessing
 ### Objective
-Aggregate and prepare data from various sources (Health Database, Life Event Database, Social Trend Database, etc.) for use in the wellness scoring system.
+Aggregate and prepare data from various sources (Health Database, Life Event Database, Social Trend Database, etc.) to create a unified dataset for calculating wellness scores.
 
 ### Steps
-- **Aggregate Data**: Collect data from relevant sources:
-  - Health data (e.g., heart rate, sleep quality)
-  - Life events (e.g., job change, health incidents)
-  - Social trends and urban issues
-- **Data Cleaning**: Remove missing values, handle outliers, and correct inconsistencies.
-- **Normalization**: Standardize continuous variables (e.g., health metrics) to a common scale.
-  - *Python Packages*: `pandas`, `sklearn.preprocessing` (e.g., `StandardScaler`, `MinMaxScaler`)
-- **Categorical Encoding**: Convert categorical data (e.g., event types) into numerical representations using one-hot encoding or embeddings.
+
+#### Aggregate Data
+- **Collect Data from Relevant Sources**: 
+  - **Health Data**: Retrieve metrics such as heart rate, sleep quality, activity levels from the **Health Database**.
+  - **Life Events**: Gather records of significant events (e.g., job changes, hospital visits) from the **Life Event Database**.
+  - **Social Trends and Urban Issues**: Incorporate broader social factors like unemployment rates, crime statistics, and access to healthcare from the **Social Trend Database** and **Urban Issue Database**.
+- **Merge Data**: Combine individual, family, and community data sources into a single dataset. This allows for comprehensive analysis at different levels.
+  - *Python Packages*: `pandas` for data merging and manipulation
+  - *Example*:
+    ```python
+    import pandas as pd
+    
+    # Load data from CSV or database sources
+    health_data = pd.read_csv("health_data.csv")
+    life_event_data = pd.read_csv("life_event_data.csv")
+    social_trend_data = pd.read_csv("social_trend_data.csv")
+    
+    # Merge datasets on common identifiers (e.g., user_id, timestamp)
+    combined_data = pd.merge(health_data, life_event_data, on="user_id")
+    combined_data = pd.merge(combined_data, social_trend_data, on="community_id")
+    ```
+
+#### Data Cleaning
+- **Handle Missing Values**: Use methods such as mean/median imputation for continuous variables and mode imputation for categorical variables. Alternatively, drop rows or columns with excessive missing data.
+  - *Python Packages*: `pandas` for filling or dropping missing data
+  - *Example*:
+    ```python
+    # Fill missing values with column mean or median
+    combined_data['heart_rate'].fillna(combined_data['heart_rate'].mean(), inplace=True)
+    combined_data['event_type'].fillna('Unknown', inplace=True)
+    ```
+- **Outlier Detection and Handling**: Identify and handle outliers, especially in continuous variables like heart rate and sleep duration, using z-score or IQR methods.
+  - *Python Packages*: `numpy`, `scipy.stats`
+  - *Example*:
+    ```python
+    from scipy.stats import zscore
+
+    # Filter out outliers using z-score threshold (e.g., z > 3)
+    combined_data = combined_data[(zscore(combined_data['heart_rate']) < 3)]
+    ```
+
+#### Normalization
+- **Standardize Continuous Variables**: Scale data to a common range (e.g., 0 to 1) or standardize to zero mean and unit variance to improve model performance.
+  - *Python Packages*: `sklearn.preprocessing` (e.g., `StandardScaler`, `MinMaxScaler`)
+  - *Example*:
+    ```python
+    from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+    # Apply StandardScaler to health metrics
+    scaler = StandardScaler()
+    combined_data[['heart_rate', 'sleep_quality', 'activity_level']] = scaler.fit_transform(
+        combined_data[['heart_rate', 'sleep_quality', 'activity_level']]
+    )
+    ```
+
+#### Categorical Encoding
+- **Convert Categorical Data**: Transform categorical variables such as event types (e.g., "job change", "hospital visit") into numerical formats using one-hot encoding or embeddings. This makes them suitable for machine learning models.
   - *Python Packages*: `sklearn.preprocessing` (e.g., `OneHotEncoder`)
+  - *Example*:
+    ```python
+    from sklearn.preprocessing import OneHotEncoder
+
+    # Use OneHotEncoder to convert event_type column to binary vectors
+    encoder = OneHotEncoder(sparse=False)
+    event_type_encoded = encoder.fit_transform(combined_data[['event_type']])
+    
+    # Create a new DataFrame from the encoded data and join with combined_data
+    event_type_df = pd.DataFrame(event_type_encoded, columns=encoder.get_feature_names_out(['event_type']))
+    combined_data = pd.concat([combined_data, event_type_df], axis=1)
+    ```
+
+### Example Workflow
+1. **Load Data**: Retrieve data from multiple sources and merge into a single dataset.
+2. **Clean Data**: Fill missing values, remove outliers, and handle inconsistencies.
+3. **Normalize Continuous Variables**: Scale health metrics and other continuous data to standardize the dataset.
+4. **Encode Categorical Data**: Transform categorical features to numerical representations through one-hot encoding.
+5. **Output Preprocessed Data**: The final preprocessed dataset is ready for use in the wellness scoring algorithm.
+
+This approach ensures that the dataset is clean, consistent, and prepared for further analysis, facilitating accurate wellness score calculations.
+
 
 ---
 
 ## 2. Weighted Scoring Calculation
 ### Objective
-Apply weights to different categories of inputs to calculate an initial wellness score.
+Apply weights to different categories of inputs (e.g., health data, life events, social trends) to calculate an initial wellness score. This allows the system to reflect the relative importance of each category in the overall wellness assessment.
 
 ### Steps
-- **Define Weights**: Assign predefined weights to categories (e.g., 0.6 for health data, 0.3 for life events, 0.1 for social trends).
-- **Calculate Individual Scores**: Multiply each input by its assigned weight. For example: Weighted Health Score = health_score * 0.6
-- **Aggregate Weighted Scores**: Sum the weighted scores to get the initial wellness score.
-- *Python Packages*: `numpy` for vectorized operations
+
+#### Define Weights
+- **Assign Predefined Weights**: Determine the relative importance of each category (e.g., health data, life events, social trends) by assigning weights that sum to 1. For example:
+  - Health Data: **0.6** (reflecting its direct impact on individual wellness)
+  - Life Events: **0.3** (accounting for significant changes in personal circumstances)
+  - Social Trends: **0.1** (representing broader community or societal influences)
+- **Customize Weights as Needed**: Weights can be adjusted based on specific project requirements or recalibrated over time based on feedback and model performance.
+
+#### Calculate Individual Scores
+- **Apply Category Weights**: For each data point, multiply its value by the corresponding weight to calculate its contribution to the wellness score.
+  - Example Calculation:
+    ```python
+    # Assume the following values
+    health_score = 0.8
+    life_event_score = 0.5
+    social_trend_score = 0.3
+
+    # Assign weights
+    health_weight = 0.6
+    life_event_weight = 0.3
+    social_trend_weight = 0.1
+
+    # Calculate weighted scores
+    weighted_health_score = health_score * health_weight  # 0.8 * 0.6 = 0.48
+    weighted_life_event_score = life_event_score * life_event_weight  # 0.5 * 0.3 = 0.15
+    weighted_social_trend_score = social_trend_score * social_trend_weight  # 0.3 * 0.1 = 0.03
+    ```
+
+#### Aggregate Weighted Scores
+- **Sum the Weighted Scores**: Combine the weighted scores from each category to produce the initial wellness score. This score reflects the overall wellness based on the specified weights for each category.
+  - Formula:
+    ```python
+    initial_wellness_score = weighted_health_score + weighted_life_event_score + weighted_social_trend_score
+    ```
+  - Using the example above:
+    ```python
+    initial_wellness_score = 0.48 + 0.15 + 0.03  # Result: 0.66
+    ```
+
+- *Python Packages*: `numpy` for vectorized operations, which can simplify calculations when handling multiple scores.
+  - Example:
+    ```python
+    import numpy as np
+
+    # Define score and weight arrays
+    scores = np.array([health_score, life_event_score, social_trend_score])
+    weights = np.array([health_weight, life_event_weight, social_trend_weight])
+
+    # Calculate initial wellness score as a dot product
+    initial_wellness_score = np.dot(scores, weights)
+    ```
+
+### Example Workflow
+1. **Define Category Weights**: Establish the weights for health, life events, and social trends based on their importance to overall wellness.
+2. **Calculate Weighted Scores**: Multiply each category score by its weight to get weighted contributions.
+3. **Aggregate to Obtain Initial Wellness Score**: Sum the weighted scores to calculate the initial wellness score.
+4. **Output Initial Score**: The resulting initial wellness score represents the weighted influence of each category on overall well-being.
+
+This approach provides a straightforward calculation of the initial wellness score, which serves as a baseline for further refinement through machine learning and adaptive feedback.
+
 
 ---
 
