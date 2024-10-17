@@ -32,9 +32,9 @@ CREATE TABLE UrbanIssue (
 CREATE TABLE IssueMetrics (
     MetricID INT PRIMARY KEY,       -- PK
     IssueID INT,                    -- FK to UrbanIssue
-    MetricName VARCHAR(100),        -- Type of issue metric (e.g., PollutionLevel, CrimeRate)
-    MetricValue DECIMAL(5, 2),      -- Quantitative value for the metric
-    MetricDate DATETIME,            -- Timestamp for when this metric was observed
+    MetricName VARCHAR(100),        
+    MetricValue DECIMAL(5, 2),      
+    MetricDate DATETIME,            
     FOREIGN KEY (IssueID) REFERENCES UrbanIssue(IssueID)
 );
 
